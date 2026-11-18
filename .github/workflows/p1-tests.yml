@@ -1,0 +1,15 @@
+name: p1 tests
+on: [pull_request, push]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - name: Unit tests
+        working-directory: p1_refund_decisions
+        run: python -m unittest -v
+      - name: End-to-end demo
+        env: {PYTHONIOENCODING: utf-8}
+        run: python p1_refund_decisions/gen_data.py && cd p1_refund_decisions && python engine.py && python report.py

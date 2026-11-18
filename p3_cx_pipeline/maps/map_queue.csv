@@ -1,0 +1,6 @@
+source,platform_value,analytics_value
+*,q_orders_l1,orders
+*,q_pharmacy,pharmacy
+*,q_refunds,refunds
+*,q_vet,vet_consult
+*,q_general,general

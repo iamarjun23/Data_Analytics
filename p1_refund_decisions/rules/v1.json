@@ -1,0 +1,22 @@
+{
+  "rule_version": "v1",
+  "approved_by": "finance.lead (synthetic)",
+  "approved_at": "2026-08-01",
+  "enabled": true,
+  "holdout_share": 0.10,
+  "auto_approve": {
+    "max_amount": 1500,
+    "max_claims_90d_cluster": 1,
+    "max_score": 0.3,
+    "require_any": [
+      {"reason": "late", "delivered_on_time": false},
+      {"reason": "damaged", "delivery_proof": "photo_ok"}
+    ]
+  },
+  "auto_decline": [
+    {"reason": "missing", "delivery_proof": "otp_ok", "min_claims_90d_cluster": 3, "max_amount": 5000}
+  ],
+  "weights": {"claims_90d": 0.35, "refund_rate": 0.20, "evidence_against": 0.30, "amount_share": 0.15},
+  "guardrails": {"max_wrong_approval_rate": 0.08, "max_wrong_decline_rate": 0.10, "auto_share_move_pts": 5},
+  "assumed_at_approval": {"auto_decision_rate": 0.50, "wrong_approval_rate": 0.05, "wrong_decline_rate": 0.10, "net_weekly_saving_rs": 5000}
+}

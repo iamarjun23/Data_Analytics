@@ -1,0 +1,6 @@
+source,platform_value,analytics_value
+telephony,ANS,answered
+telephony,NA,no_answer
+telephony,BUSY,busy
+telephony,VM,voicemail
+telephony,ABN,abandoned

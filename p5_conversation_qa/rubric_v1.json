@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "changelog": "First version.",
+  "fields": {
+    "resolved": {"values": ["yes", "no", "unclear"], "definition": "The customer's question was answered without needing an agent, or the agent finished it."},
+    "handover_with_context": {"values": ["yes", "no", "not_applicable"], "definition": "On handover the agent received intent, order id and what the bot already tried."},
+    "policy_followed": {"values": ["yes", "no"], "definition": "Refund and escalation policy followed as written."},
+    "medicine_safety": {"values": ["ok", "missing_disclaimer", "unsafe", "not_applicable"], "definition": "Medicine topics include a 'consult a vet' line and no dosing advice."},
+    "sentiment": {"values": ["positive", "neutral", "negative"], "definition": "Customer's tone at the end."},
+    "outcome_recorded": {"values": ["yes", "no"], "definition": "The session has an outcome in the ticket."}
+  },
+  "handover_requires": "order_id_or_intent",
+  "medicine_keywords": ["medicine", "tablet", "tablets", "dose", "dosage", "syrup", "dewormer", "deworming", "antibiotic", "meloxicam", "drontal", "nexgard", "simparica", "bravecto"],
+  "disclaimer_phrases": ["consult your vet"],
+  "unsafe_patterns": ["\\b(\\d+(\\.\\d+)?|half|one|two)\\s+(a\\s+)?(mg|ml|tablets?)\\b[^.]*\\b(daily|twice|once|every|a day)\\b"],
+  "bot_forbidden_promises": ["approved your refund", "refund has been processed", "refund is approved"],
+  "negative_words": ["useless", "disappointed", "worst", "terrible", "not happy", "already told"],
+  "positive_words": ["thanks", "thank you", "great", "perfect", "helpful"],
+  "policy_text": "Refunds: the bot must not approve or promise a refund. It explains the refund policy, raises a refund request with the order id, and an agent reviews it within 48 hours. Agents may approve refunds after review. Escalation: the bot hands over to an agent when it cannot answer, when the customer asks for a person, or for any medicine question it cannot answer from the product page. Medicine: never give dosing advice; always tell the customer to consult their vet."
+}

@@ -1,0 +1,50 @@
+{
+  "_comment": "One contract per source. type: string | int | datetime (with format iso | dmy_ist | epoch_ms). map: mapping table, as: output column. pii: hashed in staging. blank_warn: blank-rate threshold.",
+  "ticketing": {
+    "key": "ticket_id",
+    "fields": {
+      "ticket_id":       {"type": "string",   "required": true},
+      "created_at":      {"type": "datetime", "format": "iso", "required": true},
+      "updated_at":      {"type": "datetime", "format": "iso", "required": true},
+      "status":          {"type": "string",   "required": true, "map": "map_status", "as": "status_group"},
+      "channel":         {"type": "string",   "required": true, "map": "map_channel", "as": "channel_group"},
+      "queue":           {"type": "string",   "required": true, "map": "map_queue", "as": "team"},
+      "order_ref":       {"type": "string",   "required": false, "blank_warn": 0.08},
+      "resolved_at":     {"type": "datetime", "format": "iso", "required": false},
+      "requester_email": {"type": "string",   "required": false, "pii": true}
+    }
+  },
+  "orders": {
+    "key": "order_id",
+    "fields": {
+      "order_id":     {"type": "string",   "required": true},
+      "created_at":   {"type": "datetime", "format": "dmy_ist", "required": true},
+      "updated_at":   {"type": "datetime", "format": "iso", "required": true},
+      "status":       {"type": "string",   "required": true, "map": "map_status", "as": "status_group"},
+      "promised_at":  {"type": "datetime", "format": "dmy_ist", "required": true},
+      "delivered_at": {"type": "datetime", "format": "dmy_ist", "required": false}
+    }
+  },
+  "telephony": {
+    "key": "call_id",
+    "fields": {
+      "call_id":     {"type": "string",   "required": true},
+      "started_at":  {"type": "datetime", "format": "epoch_ms", "required": true},
+      "updated_at":  {"type": "datetime", "format": "iso", "required": true},
+      "disposition": {"type": "string",   "required": true, "map": "map_disposition", "as": "outcome"},
+      "queue":       {"type": "string",   "required": true, "map": "map_queue", "as": "team"},
+      "duration_s":  {"type": "int",      "required": true},
+      "caller_phone": {"type": "string",  "required": false, "pii": true}
+    }
+  },
+  "bot": {
+    "key": "conversation_id",
+    "fields": {
+      "conversation_id": {"type": "string",   "required": true},
+      "started_at":      {"type": "datetime", "format": "iso", "required": true},
+      "updated_at":      {"type": "datetime", "format": "iso", "required": true},
+      "channel":         {"type": "string",   "required": true, "map": "map_channel", "as": "channel_group"},
+      "outcome":         {"type": "string",   "required": false, "map": "map_status", "as": "outcome_group"}
+    }
+  }
+}

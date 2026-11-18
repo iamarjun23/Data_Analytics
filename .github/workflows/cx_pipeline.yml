@@ -1,0 +1,43 @@
+name: cx-pipeline (project 3)
+
+on:
+  schedule:
+    - cron: "30 0 * * *"      # 06:00 IST daily
+    # - cron: "30 */3 * * *"  # sale days: uncomment for a run every 3 hours
+  workflow_dispatch:
+
+permissions:
+  contents: read              # least privilege: the job only reads the repo
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: p3_cx_pipeline
+    env:
+      P3_DB: ${{ github.workspace }}/data/p3.db
+      PII_SALT: ${{ secrets.PII_SALT }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      # keep the database between runs so loads stay incremental (watermark + look-back)
+      - uses: actions/cache@v4
+        with:
+          path: data
+          key: p3-db-${{ github.run_id }}
+          restore-keys: p3-db-
+      - run: python test_pipeline.py
+      - run: python -m pipeline.run --lookback-days 3
+      - run: python -m pipeline.checks
+      - run: python -m pipeline.reconcile
+      - run: python dashboard.py
+        if: always()
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: dashboard
+          path: p3_cx_pipeline/dashboard.md
+      # a failed step fails the workflow; GitHub emails the owner. Add the second on call as a repo watcher.

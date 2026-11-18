@@ -1,0 +1,9 @@
+source,platform_value,analytics_value
+ticketing,wa_inbound,whatsapp
+ticketing,email_in,email
+ticketing,voice_in,phone
+ticketing,web_form,web
+ticketing,bot_handoff,bot
+bot,wa_bot,whatsapp
+bot,web_widget,web
+bot,app_chat,app

@@ -1,6 +1,15 @@
-# Project 3: CX data pipeline, metrics and reconciliation
+# P3: CX data pipeline, metrics and reconciliation
 
-Spec: [projects/03-cx-data-pipeline-and-metrics.md](../projects/03-cx-data-pipeline-and-metrics.md). All data is **synthetic**, with no real customers, credentials or vendor field names.
+_All data is **synthetic**, with no real customers, credentials or vendor field names._
+
+| | |
+| --- | --- |
+| **Status** | Built |
+| **Spec** | [../projects/03-cx-data-pipeline-and-metrics.md](../projects/03-cx-data-pipeline-and-metrics.md) |
+| **Requirement note** | [../docs/requirement_notes/p3_cx_pipeline.md](../docs/requirement_notes/p3_cx_pipeline.md) |
+| **Runbook** | [RUNBOOK.md](RUNBOOK.md) |
+| **Outputs** | [dashboard.md](dashboard.md) · metric definitions in [metrics.md](metrics.md) |
+| **Check** | `test_pipeline.py` (10 tests) in CI on every push; the full pipeline runs daily at 06:00 IST ([cx_pipeline.yml](../.github/workflows/cx_pipeline.yml)) |
 
 **Problem.** CX tables come from vendor platforms I don't control. Fields get renamed, new status values appear, and records are edited days later. Reports break without warning, and two dashboards show different numbers.
 
@@ -16,7 +25,7 @@ Spec: [projects/03-cx-data-pipeline-and-metrics.md](../projects/03-cx-data-pipel
 | Daily reconciliation differences | **0** day/team rows differ over 14 days and 4 sources |
 | Share of dashboard gap explained by cause | **100%** for each of 3 metrics where the other dashboard used UTC dates, report-morning data and a different population. Each cause was identified separately. |
 
-Reproduce these with `py test_pipeline.py` (10 tests, about 10 s) and the demo commands below.
+Reproduce these with `python test_pipeline.py` (10 tests, about 10 s) and the demo commands below.
 
 ## How it works
 
@@ -46,27 +55,27 @@ mock vendor API  -->  raw_* (as received)  -->  stg_* (typed, UTC, deduped, mapp
 Python 3.12 or later, standard library only (SQLite). The database goes to `../data/p3.db` (gitignored), or to `P3_DB` if set. Run from `p3_cx_pipeline/`:
 
 ```bash
-py test_pipeline.py
+python test_pipeline.py
 ```
 
 ```bash
-py -m pipeline.run --as-of 2026-11-18T00:30:00+00:00 --replay-days 14
+python -m pipeline.run --as-of 2026-11-18T00:30:00+00:00 --replay-days 14
 ```
 
 ```bash
-py -m pipeline.checks --as-of 2026-11-18T00:30:00+00:00
+python -m pipeline.checks --as-of 2026-11-18T00:30:00+00:00
 ```
 
 ```bash
-py -m pipeline.reconcile --as-of 2026-11-18T00:30:00+00:00
+python -m pipeline.reconcile --as-of 2026-11-18T00:30:00+00:00
 ```
 
 ```bash
-py dashboard.py
+python dashboard.py
 ```
 
 ```bash
-py -m pipeline.disagree --metric resolved_tickets --from 2026-11-08 --to 2026-11-14 --b 799 --b-as-of 2026-11-15T00:30:00+00:00
+python -m pipeline.disagree --metric resolved_tickets --from 2026-11-08 --to 2026-11-14 --b 799 --b-as-of 2026-11-15T00:30:00+00:00
 ```
 
 To inject drift, set `MOCK_DRIFT` before a run, for example `rename:ticketing.channel>channel_name`, `new_value:ticketing.status=escalated_l2` or `type:telephony.duration_s`. Several can be joined with `;`.
@@ -86,3 +95,10 @@ To inject drift, set `MOCK_DRIFT` before a run, for example `rename:ticketing.ch
 - **Hashing.** It protects privacy but makes some investigations slower: to join with a support tool you have to hash the lookup value too.
 - **Disagreement attribution.** The tool tries every combination of causes and picks the one closest to B. With five causes, some combination can land close to B by chance, so read the "value alone" column too.
 - **Synthetic.** The mock API is in-process (no HTTP), and the rate limit is deterministic (every 7th call). SQLite stands in for Postgres or DuckDB.
+
+## What I would do next
+
+- Add column-level lineage, so any dashboard number can be traced back to the source field it came from.
+- Add volume anomaly detection for sale days (the row-count check today compares against a 4-week same-weekday average, which a planned sale will trip).
+- Move the schedule from GitHub Actions to the company's orchestration tool once the pattern is proven, and swap SQLite for the warehouse.
+- Feed the reconciled tables to [P2](../p2_order_delay_early_warning/README.md) and [P5](../p5_conversation_qa/README.md), so their reports read the same numbers the dashboard shows.

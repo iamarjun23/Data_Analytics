@@ -1,6 +1,13 @@
-# Project 5: Conversation quality auditor, write-back check and circuit breaker
+# P5: Conversation quality auditor, write-back check and circuit breaker
 
-Spec: [../projects/05-conversation-qa-and-circuit-breaker.md](../projects/05-conversation-qa-and-circuit-breaker.md)
+| | |
+| --- | --- |
+| **Status** | Built (rules mode run; model mode written but not run) |
+| **Spec** | [../projects/05-conversation-qa-and-circuit-breaker.md](../projects/05-conversation-qa-and-circuit-breaker.md) |
+| **Requirement note** | [../docs/requirement_notes/p5_conversation_qa.md](../docs/requirement_notes/p5_conversation_qa.md) |
+| **Runbook** | [RUNBOOK.md](RUNBOOK.md) |
+| **Report** | [report.md](report.md) |
+| **Check** | `test_p5.py` (21 tests), run in CI on every push |
 
 > **All data is synthetic** (10,500 conversations, 1-7 Nov 2026, fixed seed). No real transcripts. Model mode is written but has **not been run**: it needs approval because it sends redacted text to an external API.
 
@@ -20,49 +27,49 @@ A support bot answers order, refund and pharmacy questions. Some answers are wro
 | Circuit breaker | `breaker.py` | Rolling 60-minute and 24-hour windows, closed → open → half_open → closed, state log in `breaker_state` |
 | Report | `report.py` → `report.md` | Daily quality table, by flow and handler, handover ranking with sample ids, safety list, agreement (% and Cohen's kappa), write-back and breaker summary |
 | Runbook | `RUNBOOK.md` | How to pause and confirm, who to tell, first checks, fix and restart, incident template, named second on call (placeholders) |
-| Requirement note | `REQUIREMENT_NOTE.md` | One page, ready for sign-off |
+| Requirement note | [../docs/requirement_notes/p5_conversation_qa.md](../docs/requirement_notes/p5_conversation_qa.md) | One page, ready for sign-off |
 | Tests | `test_p5.py` | 21 tests, standard library only |
 
 ## Run
 
-From `cx-analytics-projects/`:
+From the repo root:
 
 ```bash
-py p5_conversation_qa/gen_conversations.py
+python p5_conversation_qa/gen_conversations.py
 ```
 
 ```bash
-py p5_conversation_qa/webhook.py
+python p5_conversation_qa/webhook.py
 ```
 
 ```bash
-py p5_conversation_qa/auditor.py --rubric 1
+python p5_conversation_qa/auditor.py --rubric 1
 ```
 
 ```bash
-py p5_conversation_qa/auditor.py --rubric 2
+python p5_conversation_qa/auditor.py --rubric 2
 ```
 
 ```bash
-py p5_conversation_qa/breaker.py --rubric 2
+python p5_conversation_qa/breaker.py --rubric 2
 ```
 
 ```bash
-py p5_conversation_qa/report.py --rubric 2
+python p5_conversation_qa/report.py --rubric 2
 ```
 
 ```bash
-py -m unittest p5_conversation_qa/test_p5.py
+python -m unittest p5_conversation_qa/test_p5.py
 ```
 
 Model mode (after approval, with `pip install anthropic` and `ANTHROPIC_API_KEY` set; 5% daily sample, or 100% of one flow under review):
 
 ```bash
-py p5_conversation_qa/auditor.py --rubric 2 --mode model --sample 0.05
+python p5_conversation_qa/auditor.py --rubric 2 --mode model --sample 0.05
 ```
 
 ```bash
-py p5_conversation_qa/auditor.py --rubric 2 --mode model --flow refund_request
+python p5_conversation_qa/auditor.py --rubric 2 --mode model --flow refund_request
 ```
 
 ## Results (synthetic week, rubric v2, rules mode)
@@ -112,6 +119,14 @@ Under v1, the different wording also opened the breaker 3 times on healthy traff
 - In the replay, "owner review" is a fixed 30 minutes, and the half-open slice uses all traffic in the period, not a 10% slice.
 - Wrong-answer reports from agents are not watched yet; that needs an agent report feed.
 - `FakeTicketAPI` stands in for the helpdesk API. `send_with_readback()` is the part that stays.
+
+## What I would do next
+
+- Run model mode on a 5% sample once approved, and recheck agreement with a fresh human-labelled sample on real transcripts.
+- Split the breaker per flow, so a pharmacy fault does not stop order tracking.
+- Add the agent wrong-answer report feed, the one breaker metric that is not watched yet.
+- Put the [P2](../p2_order_delay_early_warning/README.md) outreach templates behind the same breaker.
+- Fix `delivery_delay` with Product and the vendor, then track its handover rate weekly in [P3](../p3_cx_pipeline/README.md)'s dashboard.
 
 ## AI-assisted code
 

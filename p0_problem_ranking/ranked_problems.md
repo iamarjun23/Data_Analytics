@@ -12,18 +12,18 @@ _Synthetic data, same structure as production. Assumptions at the bottom; edit a
 | 4 | Returns outlier: BED-L (Accessories) | 141 | ₹59,338 | 5% | return rate 31% vs 5% for peers | Category / product page |
 
 ## Finding behind #1: the delay sits in a few lanes
-The top 3 lanes carry **63% of all late deliveries** on only 54% of orders.
+The 3 worst lanes by late rate (BLR-NE, BLR-KOL, BLR-DEL, all on CourierX) carry **62% of all late deliveries** on only 26% of delivered orders.
 
 | Lane | Courier | Delivered | Late | Late % |
 |---|---|---|---|---|
-| BLR-DEL | CourierX | 1,981 | 913 | 46.1% |
-| BLR-KOL | CourierX | 1,274 | 713 | 56.0% |
-| BLR-BLR | Express | 5,032 | 443 | 8.8% |
 | BLR-NE | CourierX | 682 | 410 | 60.1% |
-| BLR-HYD | CourierA | 1,993 | 233 | 11.7% |
+| BLR-KOL | CourierX | 1,274 | 713 | 56.0% |
+| BLR-DEL | CourierX | 1,981 | 913 | 46.1% |
+| BLR-PUN | CourierB | 1,020 | 140 | 13.7% |
 | BLR-MUM | CourierB | 1,651 | 212 | 12.8% |
 | BLR-CHN | CourierA | 1,715 | 200 | 11.7% |
-| BLR-PUN | CourierB | 1,020 | 140 | 13.7% |
+| BLR-HYD | CourierA | 1,993 | 233 | 11.7% |
+| BLR-BLR | Express | 5,032 | 443 | 8.8% |
 
 ## Finding behind #4: BED-L returns are a size problem
 72% of its returns cite size. Fix: size chart or fit guidance on the product page, agreed with category and product.

@@ -1,5 +1,5 @@
 """Where does CX break, and what does it cost? Ranked list sized in rupees.
-Run: py p5_problem_ranking/ranked_problems.py  ->  p5_problem_ranking/ranked_problems.md
+Run: py p0_problem_ranking/ranked_problems.py  ->  p0_problem_ranking/ranked_problems.md
 SYNTHETIC data. All cost assumptions are in ASSUME below - change them, rerun, ranking updates.
 """
 import pathlib

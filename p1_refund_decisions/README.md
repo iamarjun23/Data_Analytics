@@ -1,10 +1,18 @@
-# Project 1: Refund and claim decision system
+# P1: Refund and claim decision system
 
 _Synthetic data, same structure as production. No real customer data, thresholds or fraud rules._
-Spec: [../projects/01-refund-claim-decision-system.md](../projects/01-refund-claim-decision-system.md) · Full results: [out/report.md](out/report.md) · Requirement note: [../docs/requirement_notes/p1_refund_decisions.md](../docs/requirement_notes/p1_refund_decisions.md) · Runbook: [RUNBOOK.md](RUNBOOK.md)
+
+| | |
+| --- | --- |
+| **Status** | Built |
+| **Spec** | [../projects/01-refund-claim-decision-system.md](../projects/01-refund-claim-decision-system.md) |
+| **Requirement note** | [../docs/requirement_notes/p1_refund_decisions.md](../docs/requirement_notes/p1_refund_decisions.md) |
+| **Runbook** | [RUNBOOK.md](RUNBOOK.md) |
+| **Report** | [out/report.md](out/report.md) and the threshold sweep chart [out/sweep.svg](out/sweep.svg) |
+| **Check** | `test_engine.py` (18 tests) plus an end-to-end run, in CI on every push |
 
 ## Problem
-Agents decide every refund or replacement claim by hand, including obvious low-risk ones. One person can claim on several accounts, so per-account history undercounts them. Nobody can say how many wrong approvals or wrong declines the current process makes, or what a different limit would do.
+Late deliveries and out-of-stock orders are the two biggest costs in [P0](../p0_problem_ranking/README.md), and many of them end as a refund or replacement claim. Agents decide every refund or replacement claim by hand, including obvious low-risk ones. One person can claim on several accounts, so per-account history undercounts them. Nobody can say how many wrong approvals or wrong declines the current process makes, or what a different limit would do.
 
 ## Approach
 1. **Link accounts.** Normalise phone numbers (last 10 digits) and addresses (lowercase, collapsed spaces, hashed with the pincode). Merge accounts on **exact** links (same phone or email) and **strong** links (same address plus the same pet or card). A **weak** link (same address, nothing else in common, like flatmates) is never merged; it only flags the claim for an agent.
@@ -33,15 +41,21 @@ Wrong declines are few but sit at the 10% guardrail. Both are honest heavy buyer
 - Audit 100% of auto-declines, not 30%. They are few and the costliest mistake.
 - Rule v2: decline on claims per order in 90 days, not the raw claim count, so heavy honest buyers stop tripping it. Test it with the same sweep before it ships.
 - Replace the synthetic `agent_decisions` table with the real agent outcomes and rerun the sweep.
+- Use the [P4](../p4_customer_profile/README.md) customer crosswalk instead of this project's own account linking, so both agree on who a customer is.
 
 ## Run it
 Python 3.10+ and the standard library only (sqlite3). Run these from the repo root:
 ```bash
-py p1_refund_decisions/gen_data.py
+python p1_refund_decisions/gen_data.py
 ```
 ```bash
-cd p1_refund_decisions && py engine.py && py report.py && py -m unittest
+cd p1_refund_decisions && python engine.py && python report.py && python -m unittest
 ```
+1. `gen_data.py` builds `data/p1.db` (fixed seed).
+2. `engine.py` links accounts, scores and decides every claim, and writes the decision log with read-back. Pass a rules file to run another version: `python engine.py rules/v1.json`.
+3. `report.py` runs the threshold sweep and writes `out/report.md` and `out/sweep.svg`.
+4. `python -m unittest` runs the 18 tests.
+
 Set `PYTHONIOENCODING=utf-8` if a Windows console garbles ₹. To use a different database, set `P1_DB`.
 
 ## Files

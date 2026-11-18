@@ -1,0 +1,49 @@
+name: ci
+
+# Runs the checks for every project on each push and pull request.
+# Each project is its own matrix job, so one failure does not hide the others.
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: ${{ matrix.name }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: "P0 problem ranking"
+            run: |
+              python common/gen_data.py
+              python p0_problem_ranking/ranked_problems.py > /dev/null
+          - name: "P1 refund decisions"
+            run: |
+              python p1_refund_decisions/gen_data.py
+              cd p1_refund_decisions
+              python -m unittest -v
+              python engine.py
+              python report.py > /dev/null
+          - name: "P2 order-delay early warning"
+            run: python p2_order_delay_early_warning/test_job.py
+          - name: "P3 CX data pipeline"
+            run: cd p3_cx_pipeline && python test_pipeline.py
+          - name: "P4 customer profile"
+            run: python p4_customer_profile/test_profile.py
+          - name: "P5 conversation QA"
+            run: python -m unittest -v p5_conversation_qa/test_p5.py
+    env:
+      PYTHONIOENCODING: utf-8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run checks
+        run: ${{ matrix.run }}

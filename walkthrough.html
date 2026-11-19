@@ -1,0 +1,566 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Data Trail — CX Analytics Projects</title>
+<style>
+  :root{
+    color-scheme: light;
+    --page:#f9f9f7; --surface:#fcfcfb; --surface-2:#f3f2ee;
+    --ink:#0b0b0b; --ink-2:#52514e; --muted:#898781;
+    --grid:#e1e0d9; --border:rgba(11,11,11,0.10);
+    --accent:#2a78d6; --accent-ink:#ffffff;
+    --good:#0ca30c; --warning:#fab219; --serious:#ec835a; --critical:#d03b3b;
+    --good-bg:#e6f6e6; --critical-bg:#fbe9e8; --warning-bg:#fff3dc;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      color-scheme: dark;
+      --page:#0d0d0d; --surface:#1a1a19; --surface-2:#232321;
+      --ink:#ffffff; --ink-2:#c3c2b7; --muted:#898781;
+      --grid:#2c2c2a; --border:rgba(255,255,255,0.10);
+      --accent:#3987e5; --accent-ink:#ffffff;
+      --good-bg:#102410; --critical-bg:#2b1414; --warning-bg:#2a2010;
+    }
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--page); color:var(--ink);
+    font-family: system-ui,-apple-system,"Segoe UI",sans-serif;
+    padding:0 16px;
+  }
+  .wrap{max-width:920px; margin:0 auto; padding:28px 0 56px;}
+
+  header.top{margin-bottom:20px;}
+  header.top h1{font-size:26px; margin:0 0 6px; letter-spacing:-0.01em;}
+  header.top p{margin:0; color:var(--ink-2); font-size:14px; max-width:60ch;}
+  .synthetic{display:inline-block; margin-top:10px; font-size:11px; color:var(--muted); border:1px solid var(--border); border-radius:20px; padding:3px 10px;}
+  .runhint{display:inline-block; margin-top:10px; margin-left:6px; font-size:11px; color:var(--accent); border:1px solid var(--border); border-radius:20px; padding:3px 10px;}
+
+  .tabs{display:flex; gap:6px; flex-wrap:wrap; border-bottom:1px solid var(--border); margin:22px 0 22px; padding-bottom:0;}
+  .tabbtn{
+    appearance:none; border:none; background:transparent; color:var(--ink-2);
+    font-size:13px; font-weight:600; padding:10px 12px; cursor:pointer;
+    border-bottom:2px solid transparent; font-family:inherit;
+  }
+  .tabbtn:hover{color:var(--ink);}
+  .tabbtn[aria-selected="true"]{color:var(--accent); border-bottom-color:var(--accent);}
+  .tabbtn .num{display:inline-block; width:18px; height:18px; border-radius:50%; background:var(--surface-2); color:var(--ink-2); font-size:10px; line-height:18px; text-align:center; margin-right:6px;}
+  .tabbtn[aria-selected="true"] .num{background:var(--accent); color:var(--accent-ink);}
+
+  .panel{display:none;}
+  .panel.active{display:block;}
+
+  .problem{
+    background:var(--surface); border:1px solid var(--border); border-radius:10px;
+    padding:14px 16px; font-size:14px; color:var(--ink-2); margin-bottom:22px;
+  }
+  .problem b{color:var(--ink);}
+
+  h2.section{font-size:12px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin:28px 0 12px; font-weight:700;}
+
+  .kpis{display:flex; gap:10px; flex-wrap:wrap;}
+  .kpi{
+    flex:1 1 150px; background:var(--surface); border:1px solid var(--border); border-radius:10px;
+    padding:14px 14px 12px;
+  }
+  .kpi .v{font-size:22px; font-weight:700; font-variant-numeric:tabular-nums; letter-spacing:-0.01em;}
+  .kpi .l{font-size:12px; color:var(--ink-2); margin-top:2px; font-weight:600;}
+  .kpi .why{font-size:11.5px; color:var(--muted); margin-top:5px; line-height:1.4;}
+
+  .glossary{
+    background:var(--surface-2); border:1px solid var(--border); border-radius:10px;
+    padding:12px 14px; margin-top:14px;
+  }
+  .glossary .gtitle{font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); font-weight:700; margin-bottom:8px;}
+  .glossary dl{margin:0; display:grid; grid-template-columns:max-content 1fr; gap:5px 10px; font-size:12.5px;}
+  .glossary dt{font-weight:700; color:var(--ink); white-space:nowrap;}
+  .glossary dd{margin:0; color:var(--ink-2);}
+
+  .flow{display:flex; align-items:stretch; gap:0; flex-wrap:wrap; row-gap:18px;}
+  .stage{
+    flex:1 1 150px; min-width:150px; background:var(--surface); border:1px solid var(--border);
+    border-radius:10px; padding:12px 13px; position:relative;
+  }
+  .stage .badge{
+    display:inline-flex; align-items:center; justify-content:center; width:20px; height:20px;
+    border-radius:50%; background:var(--accent); color:var(--accent-ink); font-size:11px; font-weight:700;
+    margin-bottom:8px;
+  }
+  .stage .name{font-size:12.5px; color:var(--ink-2); margin-bottom:4px;}
+  .stage .count{font-size:19px; font-weight:700; font-variant-numeric:tabular-nums;}
+  .stage .rule{font-size:11px; color:var(--muted); margin-top:6px; line-height:1.4;}
+  .stage .srccode{display:block; margin-top:8px; font-size:10.5px;}
+  .stage .srccode a{color:var(--accent); text-decoration:none;}
+  .stage .srccode a:hover{text-decoration:underline;}
+  .chip{
+    display:inline-block; font-size:11px; font-weight:600; border-radius:6px; padding:2px 7px;
+    margin:7px 3px 0 0; font-variant-numeric:tabular-nums;
+  }
+  .chip.bad{background:var(--critical-bg); color:var(--critical);}
+  .chip.warn{background:var(--warning-bg); color:var(--serious);}
+  .chip.ok{background:var(--good-bg); color:var(--good);}
+  .arrow{
+    flex:0 0 28px; display:flex; align-items:center; justify-content:center;
+    color:var(--muted); font-size:16px; align-self:center;
+  }
+  @media (max-width:700px){
+    .arrow{flex-basis:100%; justify-content:flex-start; padding-left:8px; transform:rotate(90deg); height:14px;}
+  }
+
+  table{width:100%; border-collapse:collapse; font-size:13px;}
+  .tablewrap{overflow-x:auto; border:1px solid var(--border); border-radius:10px;}
+  th,td{text-align:left; padding:8px 10px; border-bottom:1px solid var(--grid); white-space:nowrap;}
+  th{color:var(--muted); font-weight:600; font-size:11px; text-transform:uppercase; letter-spacing:.04em;}
+  td{font-variant-numeric:tabular-nums;}
+  tr:last-child td{border-bottom:none;}
+  td.hl{color:var(--accent); font-weight:700;}
+  .status-pill{display:inline-flex; align-items:center; gap:5px; font-weight:600; font-size:12px;}
+  .dot{width:7px; height:7px; border-radius:50%; display:inline-block;}
+  .dot.ok{background:var(--good);} .dot.bad{background:var(--critical);} .dot.warn{background:var(--warning);}
+
+  .note{font-size:12.5px; color:var(--ink-2); margin-top:14px; line-height:1.5;}
+  .note code{background:var(--surface-2); padding:1px 5px; border-radius:4px; font-size:11.5px;}
+  .filecite{font-size:12px; color:var(--muted); margin-top:18px; border-top:1px solid var(--border); padding-top:12px; line-height:1.7;}
+  .filecite a{background:var(--surface-2); padding:1px 6px; border-radius:4px; color:var(--accent); text-decoration:none; font-family:ui-monospace,SFMono-Regular,Consolas,monospace; font-size:11.5px;}
+  .filecite a:hover{text-decoration:underline;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1>Data Trail</h1>
+    <p>Five CX systems, traced step by step: what data came in, what got filtered out and why, and how the final number was produced. Every count on this page is from an actual run, not a mockup.</p>
+    <span class="synthetic">Synthetic data — same structure as production, no real customer records</span>
+    <span class="runhint">Opened from the repo — every code/report link below opens the real file</span>
+  </header>
+
+  <nav class="tabs" role="tablist">
+    <button class="tabbtn" data-tab="p1" aria-selected="true"><span class="num">1</span>Refund decisions</button>
+    <button class="tabbtn" data-tab="p2" aria-selected="false"><span class="num">2</span>Delay warning</button>
+    <button class="tabbtn" data-tab="p3" aria-selected="false"><span class="num">3</span>Data pipeline</button>
+    <button class="tabbtn" data-tab="p4" aria-selected="false"><span class="num">4</span>Customer identity</button>
+    <button class="tabbtn" data-tab="p5" aria-selected="false"><span class="num">5</span>Conversation QA</button>
+  </nav>
+
+  <!-- ============ P1 ============ -->
+  <section class="panel active" id="p1">
+    <div class="problem"><b>Problem:</b> agents decided every refund claim by hand — slow, inconsistent, and every rule cuts both ways: too loose loses money, too strict annoys genuine customers.</div>
+
+    <h2 class="section">How the output came — 13-week window, Aug 3 – Nov 1, 2026</h2>
+    <div class="kpis">
+      <div class="kpi"><div class="v">₹11,547</div><div class="l">net saving / week vs. holdout</div><div class="why">What the rules engine saves per week compared to a control group that still goes to an agent, after subtracting the cost of wrong approvals.</div></div>
+      <div class="kpi"><div class="v">55%</div><div class="l">claims auto-decided</div><div class="why">Share of claims the engine decides with no human at all — approve or decline, instantly.</div></div>
+      <div class="kpi"><div class="v">2.5%</div><div class="l">wrong-approval rate (audited)</div><div class="why">Of the claims the engine auto-approved, the share a ground-truth audit later found should have been declined.</div></div>
+      <div class="kpi"><div class="v">33 hrs</div><div class="l">agent time saved / week</div><div class="why">Agent minutes freed up because these claims never reached a human queue.</div></div>
+    </div>
+
+    <h2 class="section">The pipeline</h2>
+    <div class="flow">
+      <div class="stage">
+        <div class="badge">1</div>
+        <div class="name">Claims in window</div>
+        <div class="count">4,283</div>
+        <div class="rule">All refund/replacement claims created in the 13-week window.</div>
+        <div class="srccode"><a href="p1_refund_decisions/gen_data.py">gen_data.py</a></div>
+      </div>
+      <div class="arrow">→</div>
+      <div class="stage">
+        <div class="badge">2</div>
+        <div class="name">Holdout split</div>
+        <div class="count">3,880 treated</div>
+        <div class="rule"><code>md5(claim_id) % 100 &lt; 10</code> → agent decides as before, no rules</div>
+        <span class="chip warn">403 held out</span>
+        <div class="srccode"><a href="p1_refund_decisions/engine.py">engine.py — in_holdout()</a></div>
+      </div>
+      <div class="arrow">→</div>
+      <div class="stage">
+        <div class="badge">3</div>
+        <div class="name">Rules engine (v1)</div>
+        <div class="count">₹1,500 limit</div>
+        <div class="rule">Features: amount, account claim history, reason code, account age. Below limit + clean history → auto; else → agent queue.</div>
+        <div class="srccode"><a href="p1_refund_decisions/rules/v1.json">rules/v1.json</a> · <a href="p1_refund_decisions/engine.py">engine.py — decide()</a></div>
+      </div>
+      <div class="arrow">→</div>
+      <div class="stage">
+        <div class="badge">4</div>
+        <div class="name">Auto-decided</div>
+        <div class="count">2,122</div>
+        <div class="rule">2,073 approved · 49 declined</div>
+      </div>
+      <div class="arrow">→</div>
+      <div class="stage">
+        <div class="badge">5</div>
+        <div class="name">Audit sample check</div>
+        <div class="count">ground truth</div>
+        <div class="rule">A sample of auto-decisions is checked against <code>claim_audit</code>.</div>
+        <span class="chip bad">15 wrong approvals (₹39,324)</span>
+        <span class="chip bad">2 wrong declines</span>
+        <div class="srccode"><a href="p1_refund_decisions/report.py">report.py</a></div>
+      </div>
+    </div>
+
+    <h2 class="section">What the output changes — threshold sweep (Finance's decision)</h2>
+    <div class="tablewrap"><table>
+      <tr><th>Limit</th><th>Auto-approved</th><th>Wrong approvals</th><th>Wrong-₹ (est.)</th><th>Net / week</th></tr>
+      <tr><td>₹500</td><td>1,646</td><td>2</td><td>₹2,934</td><td>₹16,536</td></tr>
+      <tr><td>₹1,000</td><td>1,982</td><td>12</td><td>₹27,379</td><td>₹16,535</td></tr>
+      <tr class="hl"><td class="hl">₹1,500 ← chosen</td><td class="hl">2,073</td><td class="hl">15</td><td class="hl">₹39,324</td><td class="hl">₹16,141</td></tr>
+      <tr><td>₹2,000</td><td>2,119</td><td>17</td><td>₹50,680</td><td>₹15,531</td></tr>
+      <tr><td>₹3,000</td><td>2,145</td><td>20</td><td>₹72,444</td><td>₹14,013</td></tr>
+    </table></div>
+    <p class="note">Same engine, same claims — only the ₹ limit moves. ₹1,500 has the highest net in the sweep; the trade-off (more wrong approvals as the limit rises) is Finance's call to make, not the engine's.</p>
+    <div class="glossary">
+      <div class="gtitle">Terms on this page</div>
+      <dl>
+        <dt>Holdout</dt><dd>A random 10% of claims deliberately NOT given to the engine, so there's an honest "what would have happened anyway" to compare against.</dd>
+        <dt>Auto-decided</dt><dd>The engine approved or declined the claim itself — no agent touched it.</dd>
+        <dt>Wrong approval</dt><dd>The engine approved a claim that an audit (checking against known-true outcomes) later confirmed was not genuine.</dd>
+        <dt>Threshold sweep</dt><dd>Re-running the same engine at different ₹ limits to show the manager exactly what each setting costs and saves.</dd>
+      </dl>
+    </div>
+    <p class="filecite">Open the code: <a href="p1_refund_decisions/engine.py">engine.py</a> <a href="p1_refund_decisions/report.py">report.py</a> <a href="p1_refund_decisions/test_engine.py">test_engine.py</a> <a href="p1_refund_decisions/README.md">README.md</a> <a href="p1_refund_decisions/RUNBOOK.md">RUNBOOK.md</a> <a href="p1_refund_decisions/out/report.md">out/report.md</a></p>
+  </section>
+
+  <!-- ============ P2 ============ -->
+  <section class="panel" id="p2">
+    <div class="problem"><b>Problem:</b> customers only found out an order was late by messaging in ("where is my order?") — by then it's too late to do anything but apologize.</div>
+
+    <h2 class="section">How the output came — orders promised Oct 2–24, 2026, 66 runs</h2>
+    <div class="kpis">
+      <div class="kpi"><div class="v">-8.4 / 100</div><div class="l">WISMO tickets, treated vs. holdout</div><div class="why">"Where Is My Order" contact tickets. 8.4 fewer per 100 flagged orders when we proactively message the customer, versus doing nothing.</div></div>
+      <div class="kpi"><div class="v">39.1%</div><div class="l">of orders flagged</div><div class="why">Share of all orders the system judged risky enough to act on.</div></div>
+      <div class="kpi"><div class="v">34.4%</div><div class="l">false-alarm rate</div><div class="why">Of the orders flagged as at-risk, over a third arrived on time anyway — the cost of catching real delays early.</div></div>
+      <div class="kpi"><div class="v">₹1.94L</div><div class="l">net impact / 3.1 weeks</div><div class="why">Refunds and tickets avoided, minus the cost of sending the messages and making the callbacks.</div></div>
+    </div>
+
+    <h2 class="section">The pipeline</h2>
+    <div class="flow">
+      <div class="stage">
+        <div class="badge">1</div>
+        <div class="name">Orders in window</div>
+        <div class="count">5,747</div>
+        <div class="rule">Every order with a promised delivery date in the window.</div>
+        <div class="srccode"><a href="p2_order_delay_early_warning/gen.py">gen.py</a></div>
+      </div>
+      <div class="arrow">→</div>
+      <div class="stage">
+        <div class="badge">2</div>
+        <div class="name">Signal scoring</div>
+        <div class="count">6 signals</div>
+        <div class="rule">lane risk, scan gap &gt;36h, packing age, out-of-stock, bad address, promise already missed — weighted into one score.</div>
+        <div class="srccode"><a href="p2_order_delay_early_warning/job.py">job.py — signals(), score()</a></div>
+      </div>
+      <div class="arrow">→</div>
+      <div class="stage">
+        <div class="badge">3</div>
+        <div class="name">Flagged</div>
+        <div class="count">2,245</div>
+        <div class="rule">score ≥ 0.4</div>
+        <span class="chip ok">39.1% of orders</span>
+      </div>
+      <div class="arrow">→</div>
+      <div class="stage">
+        <div class="badge">4</div>
+        <div class="name">Compliance filter</div>
+        <div class="count">removes before sending</div>
+        <div class="rule">Consent, DND, quiet hours (09:00–21:00 IST), weekly contact cap, holdout.</div>
+        <span class="chip warn">332 holdout</span>
+        <span class="chip bad">39 cap</span>
+        <span class="chip bad">14 no_consent</span>
+        <span class="chip bad">3 dnd</span>
+        <div class="srccode"><a href="p2_order_delay_early_warning/job.py">job.py — downgrade(), route()</a></div>
+      </div>
+      <div class="arrow">→</div>
+      <div class="stage">
+        <div class="badge">5</div>
+        <div class="name">Action chosen &amp; sent</div>
+        <div class="count">3,276 listed</div>
+        <div class="rule">delay_notice 2,267 · address_confirm 598 · oos_offer 398 · callback 13</div>
+        <div class="srccode"><a href="p2_order_delay_early_warning/job.py">job.py — choose_action()</a></div>
+      </div>
+    </div>
+
+    <h2 class="section">Did it work? — treated vs. holdout (pre-registered outcome)</h2>
+    <div class="tablewrap"><table>
+      <tr><th>Item</th><th>Treated</th><th>Holdout</th><th>Difference</th></tr>
+      <tr><td>Flagged orders</td><td>2,026</td><td>219</td><td>—</td></tr>
+      <tr><td>WISMO tickets / 100</td><td>14.4</td><td>22.8</td><td class="hl">-8.4 (95% CI -14.2 to -2.7)</td></tr>
+      <tr><td>All contacts / 100</td><td>22.5</td><td>33.8</td><td>-11.3</td></tr>
+      <tr><td>CSAT (1–5)</td><td>3.49 (n=208)</td><td>2.74 (n=39)</td><td>+0.75</td></tr>
+    </table></div>
+    <p class="note">Holdout = <code>md5(order_id) % 10 == 0</code>. Intent-to-treat: the "treated" group includes orders we couldn't message (no consent, capped), so the effect above is not flattered.</p>
+    <div class="glossary">
+      <div class="gtitle">Terms on this page</div>
+      <dl>
+        <dt>WISMO</dt><dd>"Where Is My Order" — the ticket reason customers raise when they're waiting and worried.</dd>
+        <dt>Holdout</dt><dd>10% of orders deliberately left un-messaged, so there's a fair baseline to measure the outreach against.</dd>
+        <dt>DND / consent</dt><dd>Customers who've opted out of a channel, or asked not to be contacted — the system is not allowed to message them even if they're flagged.</dd>
+        <dt>Quiet hours</dt><dd>No calls or messages are sent outside 09:00–21:00 IST, regardless of urgency.</dd>
+        <dt>Intent-to-treat</dt><dd>A statistics rule: orders we flagged but couldn't actually reach still count in the "treated" group, so the measured benefit isn't inflated.</dd>
+      </dl>
+    </div>
+    <p class="filecite">Open the code: <a href="p2_order_delay_early_warning/job.py">job.py</a> <a href="p2_order_delay_early_warning/gen.py">gen.py</a> <a href="p2_order_delay_early_warning/report.py">report.py</a> <a href="p2_order_delay_early_warning/test_job.py">test_job.py</a> <a href="p2_order_delay_early_warning/README.md">README.md</a> <a href="p2_order_delay_early_warning/report.md">report.md</a></p>
+  </section>
+
+  <!-- ============ P3 ============ -->
+  <section class="panel" id="p3">
+    <div class="problem"><b>Problem:</b> vendor data changes without notice, gets edited after the fact, and two dashboards sometimes show two different numbers for "resolved tickets."</div>
+
+    <h2 class="section">How the output came — latest scheduled run</h2>
+    <div class="kpis">
+      <div class="kpi"><div class="v">4 / 4</div><div class="l">sources loaded clean</div><div class="why">Ticketing, orders, telephony, and bot all loaded with no schema break.</div></div>
+      <div class="kpi"><div class="v">26 / 26</div><div class="l">data-quality checks passed</div><div class="why">Automated checks across all 4 sources (freshness, duplicates, unmapped values, volume drop, timezone) — all green this run.</div></div>
+      <div class="kpi"><div class="v">0</div><div class="l">reconciliation differences</div><div class="why">The pipeline's own row counts matched the vendor's source counts exactly, per day — no silent data loss.</div></div>
+      <div class="kpi"><div class="v">2</div><div class="l">UNMAPPED codes caught, not silently dropped</div><div class="why">The vendor sent 2 status codes nobody had mapped yet. The pipeline flagged them for review instead of guessing or dropping the rows.</div></div>
+    </div>
+
+    <h2 class="section">The pipeline</h2>
+    <div class="flow">
+      <div class="stage">
+        <div class="badge">1</div>
+        <div class="name">Raw ingest</div>
+        <div class="count">4 sources</div>
+        <div class="rule">Ticketing, orders, telephony, bot — paginated mock vendor API, as received, never edited.</div>
+        <div class="srccode"><a href="p3_cx_pipeline/mock_api.py">mock_api.py</a></div>
+      </div>
+      <div class="arrow">→</div>
+      <div class="stage">
+        <div class="badge">2</div>
+        <div class="name">Schema contract check</div>
+        <div class="count">fail fast</div>
+        <div class="rule">Field renamed/missing → run fails, nothing loads. New value in a mapped column → routed to UNMAPPED, not dropped.</div>
+        <div class="srccode"><a href="p3_cx_pipeline/contracts.json">contracts.json</a> · <a href="p3_cx_pipeline/pipeline/checks.py">pipeline/checks.py</a></div>
+      </div>
+      <div class="arrow">→</div>
+      <div class="stage">
+        <div class="badge">3</div>
+        <div class="name">Upsert, 3-day look-back</div>
+        <div class="count">e.g. tickets: 670 read, 111 new, 93 changed</div>
+        <div class="rule">Re-reads the last 3 days every run, so a ticket edited after creation updates — never duplicates.</div>
+        <div class="srccode"><a href="p3_cx_pipeline/pipeline/run.py">pipeline/run.py</a></div>
+      </div>
+      <div class="arrow">→</div>
+      <div class="stage">
+        <div class="badge">4</div>
+        <div class="name">Quality checks</div>
+        <div class="count">26 checks</div>
+        <div class="rule">Freshness, duplicate keys, blank rate, UNMAPPED share, row-count drop, timezone sanity.</div>
+        <span class="chip ok">all pass this run</span>
+        <div class="srccode"><a href="p3_cx_pipeline/pipeline/checks.py">pipeline/checks.py</a></div>
+      </div>
+      <div class="arrow">→</div>
+      <div class="stage">
+        <div class="badge">5</div>
+        <div class="name">Reconcile &amp; mart</div>
+        <div class="count">0 diffs</div>
+        <div class="rule">Staging counts vs. source counts, per day. Dashboard reads only from the mart, built on written metric definitions.</div>
+        <div class="srccode"><a href="p3_cx_pipeline/pipeline/reconcile.py">pipeline/reconcile.py</a> · <a href="p3_cx_pipeline/pipeline/metrics.py">pipeline/metrics.py</a></div>
+      </div>
+    </div>
+
+    <h2 class="section">What landed in the dashboard (last 7 days)</h2>
+    <div class="tablewrap"><table>
+      <tr><th>Day (IST)</th><th>Tickets</th><th>Resolved</th><th>Late orders</th><th>Late rate</th><th>Handover rate</th></tr>
+      <tr><td>Nov 13</td><td>141</td><td>98</td><td>33</td><td>15.0%</td><td>22.8%</td></tr>
+      <tr><td>Nov 14</td><td>104</td><td>118</td><td>46</td><td>20.3%</td><td>27.0%</td></tr>
+      <tr><td>Nov 15</td><td>105</td><td>93</td><td>33*</td><td>13.5%*</td><td>23.9%</td></tr>
+      <tr><td>Nov 16</td><td>145</td><td>111</td><td>9*</td><td>5.0%*</td><td>24.6%</td></tr>
+      <tr><td>Nov 17</td><td>141</td><td>105</td><td>1*</td><td>0.5%*</td><td>10.0%*</td></tr>
+    </table></div>
+    <p class="note"><code>*</code> = provisional — outcomes for the last 1-4 days are still arriving; the pipeline's look-back is what corrects these on the next run. When two dashboards disagree, a separate tool recomputes the metric changing one cause at a time (timezone, late edits, duplicates, denominator) and ranks how much of the gap each one explains.</p>
+    <div class="glossary">
+      <div class="gtitle">Terms on this page</div>
+      <dl>
+        <dt>Schema contract</dt><dd>A written definition of what fields a source should send and their types. If the vendor renames or removes one, the run fails loudly instead of loading bad data.</dd>
+        <dt>UNMAPPED</dt><dd>A value (like a new courier status code) nobody has translated yet. It's kept and flagged, never silently dropped or guessed at.</dd>
+        <dt>Look-back</dt><dd>Every run re-reads the last 3 days, not just "new since last time" — so if a ticket gets edited two days after it was created, the pipeline still catches the edit.</dd>
+        <dt>Reconciliation</dt><dd>Comparing the pipeline's own daily row counts against the vendor's source counts, to prove nothing silently went missing.</dd>
+        <dt>Provisional (*)</dt><dd>A day's numbers that can still change because some outcomes (like a delivery status) arrive a few days late.</dd>
+      </dl>
+    </div>
+    <p class="filecite">Open the code: <a href="p3_cx_pipeline/pipeline/run.py">pipeline/run.py</a> <a href="p3_cx_pipeline/pipeline/checks.py">pipeline/checks.py</a> <a href="p3_cx_pipeline/pipeline/reconcile.py">pipeline/reconcile.py</a> <a href="p3_cx_pipeline/pipeline/metrics.py">pipeline/metrics.py</a> <a href="p3_cx_pipeline/pipeline/disagree.py">pipeline/disagree.py</a> <a href="p3_cx_pipeline/test_pipeline.py">test_pipeline.py</a> <a href="p3_cx_pipeline/README.md">README.md</a> <a href="p3_cx_pipeline/dashboard.md">dashboard.md</a> <a href="p3_cx_pipeline/metrics.md">metrics.md</a></p>
+  </section>
+
+  <!-- ============ P4 ============ -->
+  <section class="panel" id="p4">
+    <div class="problem"><b>Problem:</b> the same person can hold several accounts and phone numbers — outreach can double-contact them, or break a consent/DND rule tied to the wrong identity.</div>
+
+    <h2 class="section">How the output came — profile build + one outreach run</h2>
+    <div class="kpis">
+      <div class="kpi"><div class="v">100%</div><div class="l">match precision vs. planted truth</div><div class="why">Of the account pairs the system said belong to the same person, every single one actually did (checked against known-true answers planted in the test data).</div></div>
+      <div class="kpi"><div class="v">24</div><div class="l">duplicate clinic-booking groups found</div><div class="why">Same customer, same pet, same week, booked twice — slots that could be freed up for someone else.</div></div>
+      <div class="kpi"><div class="v">0</div><div class="l">false merges (two real people joined)</div><div class="why">The system never mistakenly treated two different customers as one person — the riskiest failure mode for identity matching.</div></div>
+      <div class="kpi"><div class="v">+6.0 pts</div><div class="l">reorder lift, contacted vs. holdout</div><div class="why">6 percentage points more of the contacted group reordered within 14 days, compared to a holdout group left alone.</div></div>
+    </div>
+
+    <h2 class="section">The pipeline — identity resolution</h2>
+    <div class="flow">
+      <div class="stage">
+        <div class="badge">1</div>
+        <div class="name">Source records</div>
+        <div class="count">5,516 accounts</div>
+        <div class="rule">+ 47,120 orders, 6,221 calls, 3,429 tickets, 855 vet consults, 826 bookings, 616 prescriptions.</div>
+        <div class="srccode"><a href="p4_customer_profile/gen_identity_data.py">gen_identity_data.py</a></div>
+      </div>
+      <div class="arrow">→</div>
+      <div class="stage">
+        <div class="badge">2</div>
+        <div class="name">Match by tier</div>
+        <div class="count">A → D confidence</div>
+        <div class="rule">Phone/email exact match (A/B) down to shared-signal weak match (D). Coverage: calls 92.9%, vet consults 81.6%, rest 98–100%.</div>
+        <div class="srccode"><a href="p4_customer_profile/build_profile.py">build_profile.py</a></div>
+      </div>
+      <div class="arrow">→</div>
+      <div class="stage">
+        <div class="badge">3</div>
+        <div class="name">Cluster into one customer</div>
+        <div class="count">1,068 customers</div>
+        <div class="rule">have &gt;1 phone; 515 have &gt;1 account. Low-confidence (tier D) clusters are held for review, never auto-merged.</div>
+        <span class="chip warn">182 held for review</span>
+        <div class="srccode"><a href="p4_customer_profile/build_profile.py">build_profile.py</a></div>
+      </div>
+      <div class="arrow">→</div>
+      <div class="stage">
+        <div class="badge">4</div>
+        <div class="name">Overdue refill funnel</div>
+        <div class="count">1,382 overdue</div>
+        <div class="rule">refill_due + reorder_due customers.</div>
+        <span class="chip bad">260 no_consent</span>
+        <span class="chip bad">116 dnd</span>
+        <span class="chip bad">28 contact_cap</span>
+        <span class="chip bad">1 match_review</span>
+        <div class="srccode"><a href="p4_customer_profile/refill_outreach.py">refill_outreach.py</a></div>
+      </div>
+      <div class="arrow">→</div>
+      <div class="stage">
+        <div class="badge">5</div>
+        <div class="name">Eligible → holdout split</div>
+        <div class="count">977 eligible</div>
+        <div class="rule">10% holdout (102) · 875 called</div>
+      </div>
+    </div>
+
+    <h2 class="section">Did it work? — 14-day reorder outcome</h2>
+    <div class="tablewrap"><table>
+      <tr><th>Item</th><th>Contacted</th><th>Holdout</th><th>Difference</th></tr>
+      <tr><td>Eligible customers</td><td>875</td><td>102</td><td>—</td></tr>
+      <tr><td>Reordered within 14 days</td><td>318 (36.3%)</td><td>31 (30.4%)</td><td class="hl">+6.0 pts</td></tr>
+      <tr><td>Net (margin − agent cost)</td><td colspan="2">—</td><td class="hl">₹3,606 this run</td></tr>
+    </table></div>
+    <p class="note">95% interval on the lift is -3.5 to +15.4 pts — does not exclude zero. Read this run as promising, not proven; the holdout is too small yet to call it on its own.</p>
+    <div class="glossary">
+      <div class="gtitle">Terms on this page</div>
+      <dl>
+        <dt>Match tier (A–D)</dt><dd>How confident the system is that two records belong to the same person. A = exact match (same phone), D = weak signal — held for a human to confirm, never auto-merged.</dd>
+        <dt>Cluster</dt><dd>All the accounts, phones and bookings the system believes belong to one real customer.</dd>
+        <dt>no_consent / dnd</dt><dd>The customer hasn't opted in to this channel, or has asked not to be contacted — excluded from outreach regardless of how overdue they are.</dd>
+        <dt>Holdout</dt><dd>10% of eligible customers deliberately not called, to measure what the outreach actually changed.</dd>
+        <dt>95% interval</dt><dd>The range the true effect probably falls in. When it crosses zero, it means "probably helps, but not proven yet with this much data."</dd>
+      </dl>
+    </div>
+    <p class="filecite">Open the code: <a href="p4_customer_profile/build_profile.py">build_profile.py</a> <a href="p4_customer_profile/gen_identity_data.py">gen_identity_data.py</a> <a href="p4_customer_profile/refill_outreach.py">refill_outreach.py</a> <a href="p4_customer_profile/test_profile.py">test_profile.py</a> <a href="p4_customer_profile/README.md">README.md</a> <a href="p4_customer_profile/coverage_report.md">coverage_report.md</a> <a href="p4_customer_profile/outreach_report.md">outreach_report.md</a></p>
+  </section>
+
+  <!-- ============ P5 ============ -->
+  <section class="panel" id="p5">
+    <div class="problem"><b>Problem:</b> bot and agent conversations can go wrong at scale — a policy break or an unsafe medicine answer needs catching before a human notices, not after.</div>
+
+    <h2 class="section">How the output came — week of Nov 1–7, 2026, ~1,500 conversations/day</h2>
+    <div class="kpis">
+      <div class="kpi"><div class="v">15</div><div class="l">safety flags sent to the pharmacy owner</div><div class="why">Conversations the auditor judged unsafe or missing a required disclaimer — routed to a human the same day.</div></div>
+      <div class="kpi"><div class="v">5</div><div class="l">circuit-breaker opens this week</div><div class="why">Times the automated safety switch paused and forced a human check before letting the bot keep running that flow.</div></div>
+      <div class="kpi"><div class="v">99%+</div><div class="l">auditor-vs-human agreement (κ 0.96–1.00)</div><div class="why">On a 100-conversation sample, the automated auditor's judgment matched a human reviewer's almost every time — so its scores can be trusted.</div></div>
+      <div class="kpi"><div class="v">99.5%</div><div class="l">webhook write-backs read back correctly</div><div class="why">When the system writes an outcome back into the ticket system, it then reads it back to confirm it actually stuck.</div></div>
+    </div>
+
+    <h2 class="section">The pipeline</h2>
+    <div class="flow">
+      <div class="stage">
+        <div class="badge">1</div>
+        <div class="name">Transcripts in</div>
+        <div class="count">~10,500 / week</div>
+        <div class="rule">Every bot and agent conversation, across 5 flows (order status, delivery delay, refund, pharmacy refill, address change).</div>
+        <div class="srccode"><a href="p5_conversation_qa/gen_conversations.py">gen_conversations.py</a></div>
+      </div>
+      <div class="arrow">→</div>
+      <div class="stage">
+        <div class="badge">2</div>
+        <div class="name">Rubric scoring (v2, rules)</div>
+        <div class="count">6 fields / conversation</div>
+        <div class="rule">resolved, handover-with-context, policy followed, medicine safety, sentiment, outcome recorded.</div>
+        <div class="srccode"><a href="p5_conversation_qa/auditor.py">auditor.py</a> · <a href="p5_conversation_qa/rubric_v2.json">rubric_v2.json</a></div>
+      </div>
+      <div class="arrow">→</div>
+      <div class="stage">
+        <div class="badge">3</div>
+        <div class="name">Safety list</div>
+        <div class="count">15 this week</div>
+        <div class="rule">Same-day to the pharmacy owner.</div>
+        <span class="chip bad">2 unsafe dosing advice</span>
+        <span class="chip warn">13 missing disclaimer</span>
+      </div>
+      <div class="arrow">→</div>
+      <div class="stage">
+        <div class="badge">4</div>
+        <div class="name">Circuit breaker</div>
+        <div class="count">open → half-open → closed</div>
+        <div class="rule">Opens on a confirmed unsafe case or a breached rate (e.g. handover-without-context 21.1% &gt; 15% for 5 min). Runs a test slice before closing.</div>
+        <span class="chip bad">5 opens this week</span>
+        <div class="srccode"><a href="p5_conversation_qa/breaker.py">breaker.py</a></div>
+      </div>
+      <div class="arrow">→</div>
+      <div class="stage">
+        <div class="badge">5</div>
+        <div class="name">Human audit check</div>
+        <div class="count">100-conversation sample</div>
+        <div class="rule">Auditor vs. a human label, every field.</div>
+        <span class="chip ok">κ 0.96–1.00</span>
+        <div class="srccode"><a href="p5_conversation_qa/report.py">report.py</a></div>
+      </div>
+    </div>
+
+    <h2 class="section">Circuit breaker log (sample)</h2>
+    <div class="tablewrap"><table>
+      <tr><th>State</th><th>When (UTC)</th><th>Reason</th></tr>
+      <tr><td><span class="status-pill"><span class="dot bad"></span>open</span></td><td>Nov 3, 06:34</td><td>medicine_unsafe — unsafe answer confirmed</td></tr>
+      <tr><td><span class="status-pill"><span class="dot warn"></span>half_open</span></td><td>Nov 3, 07:04</td><td>owner review done; test slice running</td></tr>
+      <tr><td><span class="status-pill"><span class="dot ok"></span>closed</span></td><td>Nov 3, 07:34</td><td>test slice healthy</td></tr>
+      <tr><td><span class="status-pill"><span class="dot bad"></span>open</span></td><td>Nov 5, 08:20</td><td>no_outcome_share 8.5% &gt; 5% for 5 min</td></tr>
+      <tr><td><span class="status-pill"><span class="dot warn"></span>half_open</span></td><td>Nov 5, 08:50</td><td>owner review done; test slice running</td></tr>
+      <tr><td><span class="status-pill"><span class="dot bad"></span>open</span></td><td>Nov 5, 09:20</td><td>test slice still bad — reopened</td></tr>
+      <tr><td><span class="status-pill"><span class="dot ok"></span>closed</span></td><td>Nov 5, 10:20</td><td>test slice healthy</td></tr>
+    </table></div>
+    <p class="note">The breaker never stays open on its own say-so: it pauses, routes to a test slice, and needs the slice to come back healthy before it closes — same pattern as a production feature flag, applied to conversation safety.</p>
+    <div class="glossary">
+      <div class="gtitle">Terms on this page</div>
+      <dl>
+        <dt>Rubric</dt><dd>The written checklist the auditor scores every conversation against — the same questions a QA reviewer would ask.</dd>
+        <dt>Open / half-open / closed</dt><dd>Breaker states: <b>open</b> = something broke, the flow is paused for review; <b>half-open</b> = a small test slice is running under watch; <b>closed</b> = healthy, running normally again.</dd>
+        <dt>κ (kappa)</dt><dd>A statistic for "do two reviewers agree, more than they would by chance." 1.0 is perfect agreement; above 0.8 is considered strong.</dd>
+        <dt>Write-back / read-back</dt><dd>The system writes a result into the ticket system, then immediately reads it back to prove the write actually took — catches silent failures.</dd>
+      </dl>
+    </div>
+    <p class="filecite">Open the code: <a href="p5_conversation_qa/auditor.py">auditor.py</a> <a href="p5_conversation_qa/breaker.py">breaker.py</a> <a href="p5_conversation_qa/report.py">report.py</a> <a href="p5_conversation_qa/webhook.py">webhook.py</a> <a href="p5_conversation_qa/test_p5.py">test_p5.py</a> <a href="p5_conversation_qa/README.md">README.md</a> <a href="p5_conversation_qa/report.md">report.md</a></p>
+  </section>
+
+</div>
+
+<script>
+(function(){
+  var btns = document.querySelectorAll('.tabbtn');
+  var panels = document.querySelectorAll('.panel');
+  btns.forEach(function(btn){
+    btn.addEventListener('click', function(){
+      btns.forEach(function(b){ b.setAttribute('aria-selected','false'); });
+      panels.forEach(function(p){ p.classList.remove('active'); });
+      btn.setAttribute('aria-selected','true');
+      document.getElementById(btn.dataset.tab).classList.add('active');
+    });
+  });
+})();
+</script>
+</body>
+</html>

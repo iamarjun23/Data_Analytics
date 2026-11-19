@@ -13,6 +13,8 @@ import pathlib
 import sqlite3
 import sys
 
+sys.stdout.reconfigure(encoding="utf-8")  # Windows console defaults to cp1252, can't print rupee sign
+
 from engine import DB, DEFAULT_RULES, decide, features, in_holdout
 
 OUT = pathlib.Path(__file__).resolve().parent / "out"

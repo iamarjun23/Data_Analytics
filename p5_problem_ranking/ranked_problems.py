@@ -4,6 +4,9 @@ SYNTHETIC data. All cost assumptions are in ASSUME below - change them, rerun, r
 """
 import pathlib
 import sqlite3
+import sys
+
+sys.stdout.reconfigure(encoding="utf-8")  # Windows console defaults to cp1252, can't print rupee sign
 
 HERE = pathlib.Path(__file__).resolve().parent
 con = sqlite3.connect(HERE.parent / "data" / "cx.db")
